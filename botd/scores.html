@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OptionallyBlueStudios | Battle Of The Devs | Scoreboard</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .scoreboard {
+      background: #1e1e1e;
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    }
+
+    .scores {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+
+    .team {
+      flex: 1;
+      margin: 0 10px;
+      padding: 20px;
+      background: #2a2a2a;
+      border-radius: 15px;
+      font-size: 2rem;
+    }
+
+    .round, .next-round {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #bbb;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="scoreboard">
+    <h1>BOTD | Scoreboard</h1>
+    <div class="scores">
+      <div class="team" id="team1">...</div>
+      <div class="team" id="team2">...</div>
+    </div>
+    <div class="round" id="round">Round: ...</div>
+    <div class="next-round" id="nextRound">Next Round: ...</div>
+  </div>
+
+<script>
+  async function checkIfHappening() {
+    try {
+      const happening = await fetch("storage/currentlyhappening.txt").then(r => r.text());
+      const value = happening.trim().toLowerCase(); // normalize case
+      
+      console.log("Currently happening file value:", value);
+
+      if (value === "f") {  // Compare with string "false", not boolean false
+        window.location.href = "status.html"; // redirect if not happening
+      } else if (value === "t") {  // Compare with string "true", not boolean true
+        loadData(); // only load if happening
+        setInterval(loadData, 10000);
+      } else {
+        console.warn("Unexpected value in currentlyhappening.txt:", value);
+      }
+    } catch (e) {
+      console.error("Error checking event status:", e);
+      // Optionally redirect on error:
+      // window.location.href = "https://example.com";
+    }
+  }
+
+  async function loadData() {
+    try {
+      const [team1, team2, round, nextRound] = await Promise.all([
+        fetch("storage/team1.txt").then(r => r.text()),
+        fetch("storage/team2.txt").then(r => r.text()),
+        fetch("storage/round.txt").then(r => r.text()),
+        fetch("storage/nextround.txt").then(r => r.text())
+      ]);
+
+      document.getElementById("team1").innerHTML = team1.trim();
+      document.getElementById("team2").innerHTML = team2.trim();
+      document.getElementById("round").innerHTML = "Round: " + round.trim();
+      document.getElementById("nextRound").innerHTML = "Next Round: " + nextRound.trim();
+    } catch (e) {
+      console.error("Error loading data:", e);
+    }
+  }
+
+  // Run the check first
+  checkIfHappening();
+</script>
+</body>
+</html>

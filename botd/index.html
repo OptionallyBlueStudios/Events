@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OptionallyBlueStudios | Battle Of The Devs | Scoreboard</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .scoreboard {
+      background: #1e1e1e;
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    }
+
+    .scores {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+
+    .team {
+      flex: 1;
+      margin: 0 10px;
+      padding: 20px;
+      background: #2a2a2a;
+      border-radius: 15px;
+      font-size: 2rem;
+    }
+
+    .round, .next-round {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #bbb;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="scoreboard">
+    <h1>Battle Of The Devs</h1>
+    <div class="scores">
+      <div class="team" id="team1">Discarded Developers</div>
+      <h1 style="justify-content: center; text-align: center; margin-top: 40px;">VS</h1>
+      <div class="team" id="team2">S.C.A.N. <br>Developers</div>
+    </div>
+    <div class="round" id="round">With a live scoreboard<div>
+    <div class="next-round" id="nextRound">View it <a href="scores.html">here</a></div>
+  </div>
+</body>
+</html>
