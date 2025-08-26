@@ -1,2 +1,1 @@
-# Under Construction
-DO NOT SYNC THE UNDER CONSTRUCTION TEMPLATE WITH THE OPTIONALLYBLUESTUDIOS.GITHUB.IO SITE
+# The Official OptionallyBlueStudios Event Website
