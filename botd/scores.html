@@ -64,7 +64,7 @@
 <script>
   async function checkIfHappening() {
     try {
-      const happening = await fetch("storage/currentlyhappening.txt").then(r => r.text());
+      const happening = await fetch("https://github.com/OptionallyBlueStudios/Events/raw/refs/heads/main/botd/storage/currentlyhappening.txt").then(r => r.text());
       const value = happening.trim().toLowerCase(); // normalize case
       
       console.log("Currently happening file value:", value);
@@ -87,10 +87,10 @@
   async function loadData() {
     try {
       const [team1, team2, round, nextRound] = await Promise.all([
-        fetch("storage/team1.txt").then(r => r.text()),
-        fetch("storage/team2.txt").then(r => r.text()),
-        fetch("storage/round.txt").then(r => r.text()),
-        fetch("storage/nextround.txt").then(r => r.text())
+        fetch("https://github.com/OptionallyBlueStudios/Events/raw/refs/heads/main/botd/storage/team1.txt").then(r => r.text()),
+        fetch("https://github.com/OptionallyBlueStudios/Events/raw/refs/heads/main/botd/storage/team2.txt").then(r => r.text()),
+        fetch("https://github.com/OptionallyBlueStudios/Events/raw/refs/heads/main/botd/storage/round.txt").then(r => r.text()),
+        fetch("https://github.com/OptionallyBlueStudios/Events/raw/refs/heads/main/botd/storage/nextround.txt").then(r => r.text())
       ]);
 
       document.getElementById("team1").innerHTML = team1.trim();
