@@ -62,25 +62,12 @@
   </div>
 
 <script>
-  // Function to fetch files from GitHub using the API (avoids CORS issues)
-  async function fetchGitHubFile(filename) {
-    const apiUrl = `https://api.github.com/repos/OptionallyBlueStudios/Events/contents/botd/storage/${filename}`;
-    const response = await fetch(apiUrl);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${filename}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    
-    // GitHub API returns base64 encoded content, we need to decode it
-    return atob(data.content).trim();
-  }
+
 
   async function checkIfHappening() {
     try {
-      const happening = await fetchGitHubFile('currentlyhappening.txt');
-      const value = happening.toLowerCase();
+      const happening = await fetch("https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/currentlyhappening.txt").then(r => r.text());
+      const value = happening.trim().toLowerCase();
       
       console.log("Currently happening file value:", value);
 
@@ -108,16 +95,16 @@
   async function loadData() {
     try {
       const [team1, team2, round, nextRound] = await Promise.all([
-        fetchGitHubFile('team1.txt'),
-        fetchGitHubFile('team2.txt'),
-        fetchGitHubFile('round.txt'),
-        fetchGitHubFile('nextround.txt')
+        fetch("https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/team1.txt").then(r => r.text()),
+        fetch("https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/team2.txt").then(r => r.text()),
+        fetch("https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/round.txt").then(r => r.text()),
+        fetch("https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/nextround.txt").then(r => r.text())
       ]);
 
-      document.getElementById("team1").innerHTML = team1;
-      document.getElementById("team2").innerHTML = team2;
-      document.getElementById("round").innerHTML = "Round: " + round;
-      document.getElementById("nextRound").innerHTML = "Next Round: " + nextRound;
+      document.getElementById("team1").innerHTML = team1.trim();
+      document.getElementById("team2").innerHTML = team2.trim();
+      document.getElementById("round").innerHTML = "Round: " + round.trim();
+      document.getElementById("nextRound").innerHTML = "Next Round: " + nextRound.trim();
     } catch (e) {
       console.error("Error loading data:", e);
       // Show error in scoreboard
