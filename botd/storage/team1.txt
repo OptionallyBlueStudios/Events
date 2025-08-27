@@ -2,6 +2,6 @@ Discarded Devs:
 
 <!-- PUT THE SCORE BELOW -->
 
-1
+2
 
 <!-- END DOCUMENT -->
