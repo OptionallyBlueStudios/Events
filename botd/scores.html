@@ -16,6 +16,69 @@
       margin: 0;
     }
 
+    .cdn-selector {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #2a2a2a;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+      min-width: 250px;
+    }
+
+    .cdn-status {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+    }
+
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+      background-color: #666;
+      transition: background-color 0.3s;
+    }
+
+    .status-indicator.online {
+      background-color: #4caf50;
+      box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+    }
+
+    .status-indicator.offline {
+      background-color: #f44336;
+      box-shadow: 0 0 8px rgba(244, 67, 54, 0.5);
+    }
+
+    .status-indicator.checking {
+      background-color: #ff9800;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .cdn-select {
+      width: 100%;
+      padding: 8px;
+      background: #1e1e1e;
+      color: #f0f0f0;
+      border: 1px solid #555;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+
+    .cdn-help {
+      font-size: 0.8rem;
+      color: #bbb;
+      font-style: italic;
+    }
+
     .scoreboard {
       background: #1e1e1e;
       border-radius: 20px;
@@ -61,9 +124,31 @@
       color: #aaa;
       background: transparent;
     }
+
+    .error-message {
+      color: #ff6b6b;
+      background: #2a1f1f;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 10px 0;
+      border-left: 4px solid #ff6b6b;
+    }
   </style>
 </head>
 <body>
+  <div class="cdn-selector">
+    <div class="cdn-status">
+      <div class="status-indicator checking" id="statusIndicator"></div>
+      <span id="statusText">Checking CDN status...</span>
+    </div>
+    <select class="cdn-select" id="cdnSelect">
+      <option value="cdnjs">CDNJS</option>
+      <option value="jsdelivr">JSDelivr</option>
+      <option value="githack">GitHack (Default)</option>
+    </select>
+    <div class="cdn-help">Not working? Try changing your CDN!</div>
+  </div>
+
   <div class="scoreboard">
     <h1>BOTD | Scoreboard</h1>
     <div class="scores">
@@ -75,38 +160,125 @@
   </div>
 
   <div id="footer">
-    <p>Sponsored by ProsperBrowse | Powered by JSDelivr CDN</p>
+    <p>Sponsored by ProsperBrowse | Powered by CDNJS, JSDelivr, GitHub Pages, GitHub & GitHack</p>
     <p id="commitInfo">Loading last commit info...</p>
   </div>
 
 <script>
+  const CDN_CONFIGS = {
+    cdnjs: {
+      name: "CDNJS",
+      baseUrl: "https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/",
+      testUrl: "https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/currentlyhappening.txt"
+    },
+    jsdelivr: {
+      name: "JSDelivr", 
+      baseUrl: "https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/",
+      testUrl: "https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/currentlyhappening.txt"
+    },
+    githack: {
+      name: "GitHack",
+      baseUrl: "https://raw.githack.com/OptionallyBlueStudios/Events/main/botd/storage/",
+      testUrl: "https://raw.githack.com/OptionallyBlueStudios/Events/main/botd/storage/currentlyhappening.txt"
+    }
+  };
+
+  let currentCdn = 'githack';
+  let dataLoadInterval;
+
+  async function testCdnStatus(cdn) {
+    const statusIndicator = document.getElementById('statusIndicator');
+    const statusText = document.getElementById('statusText');
+    
+    statusIndicator.className = 'status-indicator checking';
+    statusText.textContent = `Testing ${CDN_CONFIGS[cdn].name}...`;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(CDN_CONFIGS[cdn].testUrl, {
+        signal: controller.signal,
+        cache: 'no-cache'
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        statusIndicator.className = 'status-indicator online';
+        statusText.textContent = `${CDN_CONFIGS[cdn].name} - Online`;
+        return true;
+      } else {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (error) {
+      statusIndicator.className = 'status-indicator offline';
+      statusText.textContent = `${CDN_CONFIGS[cdn].name} - Offline`;
+      return false;
+    }
+  }
+
+  function switchCdn(newCdn) {
+    currentCdn = newCdn;
+    
+    if (dataLoadInterval) {
+      clearInterval(dataLoadInterval);
+    }
+    
+    testCdnStatus(newCdn).then(isOnline => {
+      if (isOnline) {
+        checkIfHappening();
+      }
+    });
+  }
+
   async function checkIfHappening() {
     try {
-      const happening = await fetch("https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/currentlyhappening.txt").then(r => r.text());
+      const happening = await fetch(CDN_CONFIGS[currentCdn].baseUrl + "currentlyhappening.txt", {
+        cache: 'no-cache'
+      }).then(r => r.text());
       const value = happening.trim().toLowerCase();
       
       if (value === "false" || value === "f") {
-        window.location.href = "status.html";
+        showEventNotHappening();
       } else if (value === "true" || value === "t") {
         loadData();
-        setInterval(loadData, 10000);
+        dataLoadInterval = setInterval(loadData, 10000);
       }
     } catch (e) {
-      document.querySelector('.scoreboard').innerHTML = `
-        <h1>Error Loading Event Status</h1>
-        <p style="color: #ff6b6b;">Unable to check if event is happening.</p>
-        <p style="color: #bbb; font-size: 0.9rem;">Error: ${e.message}</p>
-      `;
+      showError("Unable to check if event is happening", e.message);
     }
+  }
+
+  function showEventNotHappening() {
+    document.querySelector('.scoreboard').innerHTML = `
+      <h1>BOTD | Event Not Active</h1>
+      <div class="error-message">
+        <p><strong>The Battle of the Devs event is not currently happening.</strong></p>
+        <p>Please check back later or contact the organizers for more information.</p>
+      </div>
+    `;
+  }
+
+  function showError(title, message) {
+    document.querySelector('.scoreboard').innerHTML = `
+      <h1>BOTD | Error</h1>
+      <div class="error-message">
+        <p><strong>${title}</strong></p>
+        <p style="font-size: 0.9rem;">Error: ${message}</p>
+        <p style="font-size: 0.8rem; margin-top: 10px;">Try changing your CDN using the selector in the top left.</p>
+      </div>
+    `;
   }
 
   async function loadData() {
     try {
+      const baseUrl = CDN_CONFIGS[currentCdn].baseUrl;
       const [team1, team2, round, nextRound] = await Promise.all([
-        fetch("https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/team1.txt").then(r => r.text()),
-        fetch("https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/team2.txt").then(r => r.text()),
-        fetch("https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/round.txt").then(r => r.text()),
-        fetch("https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/nextround.txt").then(r => r.text())
+        fetch(baseUrl + "team1.txt", { cache: 'no-cache' }).then(r => r.text()),
+        fetch(baseUrl + "team2.txt", { cache: 'no-cache' }).then(r => r.text()),
+        fetch(baseUrl + "round.txt", { cache: 'no-cache' }).then(r => r.text()),
+        fetch(baseUrl + "nextround.txt", { cache: 'no-cache' }).then(r => r.text())
       ]);
 
       document.getElementById("team1").innerHTML = team1.trim();
@@ -114,11 +286,7 @@
       document.getElementById("round").innerHTML = "Round: " + round.trim();
       document.getElementById("nextRound").innerHTML = "Next Round: " + nextRound.trim();
     } catch (e) {
-      document.querySelector('.scoreboard').innerHTML = `
-        <h1>BOTD | Scoreboard</h1>
-        <p style="color: #ff6b6b;">Error loading scoreboard data</p>
-        <p style="color: #bbb; font-size: 0.9rem;">Error: ${e.message}</p>
-      `;
+      showError("Error loading scoreboard data", e.message);
     }
   }
 
@@ -128,7 +296,14 @@
       const data = await res.json();
 
       const message = data.commit.message;
-      const author = data.commit.author.name;
+      let author = data.commit.author.name;
+      
+      if (author === "superCoder-777") {
+        author = "Super777 (Scoreboard Co-Manager)";
+      } else if (author === "StuffzEZ (Aka Stuf_y)") {
+        author = "StuffzEZ (Event Host)";
+      }
+      
       const date = new Date(data.commit.author.date).toLocaleString();
 
       document.getElementById("commitInfo").textContent =
@@ -139,7 +314,14 @@
     }
   }
 
-  checkIfHappening();
+  // Event listeners
+  document.getElementById('cdnSelect').addEventListener('change', (e) => {
+    switchCdn(e.target.value);
+  });
+
+  // Initialize
+  document.getElementById('cdnSelect').value = 'githack';
+  switchCdn('githack');
   loadCommitInfo();
 </script>
 </body>
