@@ -4,21 +4,6 @@
   <meta charset="UTF-8">
   <title>OptionallyBlueStudios | Battle Of The Devs | Scoreboard</title>
   <style>
-  
-  #header {
-  position: relative;
-  min-height: 150px;
-}
-
-#header-content {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-}
-
-#header, #header * {
-  background: rgba(40, 40, 100, 0.25);
-}
     body {
       background-color: #121212;
       color: #f0f0f0;
@@ -63,6 +48,19 @@
     h1 {
       margin-bottom: 10px;
     }
+
+    /* Footer */
+    #footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      padding: 10px;
+      font-size: 0.9rem;
+      color: #aaa;
+      background: transparent;
+    }
   </style>
 </head>
 <body>
@@ -75,33 +73,25 @@
     <div class="round" id="round">Round: ...</div>
     <div class="next-round" id="nextRound">Next Round: ...</div>
   </div>
-  <div id="header">
-    <h2> Sponsored by ProsperBrowse
-      <br>Powered by JSDelivr CDN</h2>
+
+  <div id="footer">
+    <p>Sponsored by ProsperBrowse | Powered by JSDelivr CDN</p>
+    <p id="commitInfo">Loading last commit info...</p>
   </div>
+
 <script>
-
-
   async function checkIfHappening() {
     try {
       const happening = await fetch("https://cdn.jsdelivr.net/gh/OptionallyBlueStudios/Events@main/botd/storage/currentlyhappening.txt").then(r => r.text());
       const value = happening.trim().toLowerCase();
       
-      console.log("Currently happening file value:", value);
-
       if (value === "false" || value === "f") {
-        console.log("Event not happening, redirecting...");
         window.location.href = "status.html";
       } else if (value === "true" || value === "t") {
-        console.log("Event is happening, loading scoreboard...");
         loadData();
         setInterval(loadData, 10000);
-      } else {
-        console.warn("Unexpected value in currentlyhappening.txt:", value);
       }
     } catch (e) {
-      console.error("Error checking event status:", e);
-      // Show error message on page
       document.querySelector('.scoreboard').innerHTML = `
         <h1>Error Loading Event Status</h1>
         <p style="color: #ff6b6b;">Unable to check if event is happening.</p>
@@ -124,8 +114,6 @@
       document.getElementById("round").innerHTML = "Round: " + round.trim();
       document.getElementById("nextRound").innerHTML = "Next Round: " + nextRound.trim();
     } catch (e) {
-      console.error("Error loading data:", e);
-      // Show error in scoreboard
       document.querySelector('.scoreboard').innerHTML = `
         <h1>BOTD | Scoreboard</h1>
         <p style="color: #ff6b6b;">Error loading scoreboard data</p>
@@ -134,8 +122,25 @@
     }
   }
 
-  // Run the check first
+  async function loadCommitInfo() {
+    try {
+      const res = await fetch("https://api.github.com/repos/OptionallyBlueStudios/Events/commits/main");
+      const data = await res.json();
+
+      const message = data.commit.message;
+      const author = data.commit.author.name;
+      const date = new Date(data.commit.author.date).toLocaleString();
+
+      document.getElementById("commitInfo").textContent =
+        `Last commit by ${author} on ${date}: "${message}"`;
+    } catch (e) {
+      document.getElementById("commitInfo").textContent =
+        "Unable to load commit info.";
+    }
+  }
+
   checkIfHappening();
+  loadCommitInfo();
 </script>
 </body>
 </html>
