@@ -4,6 +4,21 @@
   <meta charset="UTF-8">
   <title>OptionallyBlueStudios | Battle Of The Devs | Scoreboard</title>
   <style>
+  
+  #header {
+  position: relative;
+  min-height: 150px;
+}
+
+#header-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+#header, #header * {
+  background: rgba(40, 40, 100, 0.25);
+}
     body {
       background-color: #121212;
       color: #f0f0f0;
@@ -60,7 +75,10 @@
     <div class="round" id="round">Round: ...</div>
     <div class="next-round" id="nextRound">Next Round: ...</div>
   </div>
-
+  <div id="header">
+    <h2> Sponsored by ProsperBrowse
+      <br>Powered by JSDelivr CDN</h2>
+  </div>
 <script>
 
 
